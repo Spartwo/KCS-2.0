@@ -83,7 +83,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KCSDebug - Copy.cs" />
+    <Compile Include="KCSDebug.cs" />
     <Compile Include="MassCannonTargetting.cs" />
     <Compile Include="BombGuidance.cs" />
     <Compile Include="RocketTargetting.cs" />
