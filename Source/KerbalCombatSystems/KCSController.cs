@@ -126,6 +126,11 @@ namespace KerbalCombatSystems
             weaponList = weaponList.Concat(ungroupedMissiles).ToList();
         }
 
+        private void UpdateCamera()
+        {
+
+        }
+
         public void ToggleAIs()
         {
             foreach (var controller in ships)
@@ -148,12 +153,13 @@ namespace KerbalCombatSystems
 
         void OnGUI()
         {
-            // todo: don't draw when UI is hidden
-            if (guiEnabled) DrawGUI();
+            if (guiEnabled && KCSDebug.ShowUI) DrawGUI();
         }
 
-        private void DrawGUI() =>
+        private void DrawGUI()
+        {
             windowRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), windowRect, FillWindow, "Kerbal Combat Suite", GUILayout.Height(0), GUILayout.Width(windowWidth));
+        }
 
         private void FillWindow(int windowID)
         {
@@ -218,6 +224,7 @@ namespace KerbalCombatSystems
                         v.GetDisplayName(), v.parts.Count, Math.Round(v.GetTotalMass(), 1), controller.alive, targetName, controller.state, colour);
 
                     string AI = String.Format("<color={0}>AI</color>", controller.controllerRunning ? "#07D207" : "#FFFFFF");
+                    string CamView = String.Format("<color={0}>AI</color>", controller.controllerRunning ? "#07D207" : "#FFFFFF");
 
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button(craftName, GUILayout.Width(windowWidth * 0.8f)))
@@ -234,6 +241,10 @@ namespace KerbalCombatSystems
                     if (GUILayout.Button(String.Format("<color={1}>{0}</color>", controller.side, controller.side == Side.A ? "#0AACE3" : "#E30A0A")))
                     {
                         controller.ToggleSide();
+                    }
+                    if (GUILayout.Button(CamView))
+                    {
+                        controller.ToggleAI();
                     }
                     GUILayout.EndVertical();
 

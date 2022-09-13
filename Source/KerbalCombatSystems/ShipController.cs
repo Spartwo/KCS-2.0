@@ -53,6 +53,9 @@ namespace KerbalCombatSystems
         private float maxAcceleration;
 
         [KSPField(isPersistant = true)]
+        public bool CameraOpen;
+
+        [KSPField(isPersistant = true)]
         public Side side;
 
         [KSPField(isPersistant = true)]
@@ -665,6 +668,44 @@ namespace KerbalCombatSystems
             {
                 side = Side.A;
             }
+        }
+
+        //I'll move this shit once functional
+        GameObject CamFocus;
+        Camera SpecCam;
+        public static Transform cameraTransform;
+
+        Vector3 FocalPosition;
+
+        public void ToggleCamera()
+        {
+            if (CameraOpen)
+            {
+                Destroy(CamFocus);
+                CameraOpen = false;
+            }
+            else
+            {
+                //create an empty gameobject
+                CamFocus = new GameObject("Cool GameObject made from Code");
+
+                //child to focus
+                SpecCam.transform.SetParent(CamFocus.transform, false);
+                //spawn and open the camera stuff
+
+                //create focal camera
+
+                //set distance
+                CameraOpen = true;
+                SpecCam.transform.position = new Vector3(10, 0, 5);
+            }
+        }
+
+        public void UpdateCameraPos()
+        {
+            FocalPosition = part.vessel.rootPart.transform.position;
+            Vector3 CamAim = FlightGlobals.fetch.activeVessel.transform.position;
+            CamFocus.transform.LookAt(CamAim);
         }
 
         private bool CheckOrbitUnsafe()

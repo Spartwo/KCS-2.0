@@ -14,10 +14,29 @@ namespace KerbalCombatSystems
     public class KCSDebug : MonoBehaviour
     {
         public static bool ShowLines;
+        public static bool ShowUI;
+        //used to track if the debug lines were showing prior
+        private bool ShowLinesDebug;
 
         private void Start()
         {
             ShowLines = false;
+            ShowUI = true;
+            GameEvents.onHideUI.Add(OnHideUI);
+            GameEvents.onShowUI.Add(OnShowUI);
+        }
+
+        private void OnHideUI()
+        {
+            ShowLinesDebug = ShowLines;
+            ShowLines = false;
+            ShowUI = false;
+        }
+
+        private void OnShowUI()
+        {
+            if (ShowLinesDebug) ShowLines = true;
+            ShowUI = true;
         }
 
         private void Update()
