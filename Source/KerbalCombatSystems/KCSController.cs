@@ -239,10 +239,10 @@ namespace KerbalCombatSystems
                     {
                         controller.ToggleSide();
                     }
-                    if (GUILayout.Button(CamView))
-                    {
-                        controller.ToggleAI();
-                    }
+                    //if (GUILayout.Button(CamView))
+                    //{
+                    //   controller.ToggleCam();
+                    //}
                     GUILayout.EndVertical();
 
                     GUILayout.EndHorizontal();

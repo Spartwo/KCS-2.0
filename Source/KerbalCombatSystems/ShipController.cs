@@ -669,7 +669,7 @@ namespace KerbalCombatSystems
                 side = Side.A;
             }
         }
-
+        /*
         //I'll move this shit once functional
         GameObject CamFocus;
         Camera SpecCam;
@@ -706,7 +706,7 @@ namespace KerbalCombatSystems
             FocalPosition = part.vessel.rootPart.transform.position;
             Vector3 CamAim = FlightGlobals.fetch.activeVessel.transform.position;
             CamFocus.transform.LookAt(CamAim);
-        }
+        }*/
 
         private bool CheckOrbitUnsafe()
         {
