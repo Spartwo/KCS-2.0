@@ -90,6 +90,19 @@ namespace KerbalCombatSystems
                 scene = UI_Scene.All
             )]
         public float firingSpeed = 20f;
+        
+        [KSPField(isPersistant = true,
+            guiActive = true,
+            guiActiveEditor = true,
+            guiName = "Dodge when Targetted",
+            groupName = shipControllerGroupName,
+            groupDisplayName = shipControllerGroupName),
+            UI_Toggle(
+                enabledText = "Enabled",
+                disabledText = "Disabled",
+                scene = UI_Scene.All
+            )]
+        public bool DodgeEnabled = true;
 
         #region Controller State & Start/Update
 
@@ -268,7 +281,7 @@ namespace KerbalCombatSystems
                     yield return new WaitForFixedUpdate();
                 }
             }
-            else if (CheckIncoming()) // Needs to start evading an incoming missile.
+            else if (CheckIncoming() && DodgeEnabled) // Needs to start evading an incoming missile.
             {
                 state = "Dodging";
 
