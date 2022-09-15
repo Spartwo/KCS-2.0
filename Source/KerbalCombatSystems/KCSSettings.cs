@@ -11,8 +11,6 @@ using UnityEngine;
 
 namespace KerbalCombatSystems
 {
-    // http://forum.kerbalspaceprogram.com/index.php?/topic/147576-modders-notes-for-ksp-12/#comment-2754813
-    // search for "Mod integration into Stock Settings
 
     public class KCSCombat : GameParameters.CustomParameterNode
     {
@@ -29,6 +27,8 @@ namespace KerbalCombatSystems
         public int ScalingFactor { get { return ScalingFactorDefault; } set { ScalingFactorDefault = value; } }
         private int ScalingFactorDefault = 10;
 
+
+        //todo: migrate referesh rate into custom mod settings
         [GameParameters.CustomIntParameterUI("Refresh Rate", minValue = 1, maxValue = 30, stepSize = 1,
         toolTip = "How many seconds between intensive but accuracy aiding AI functions")]
         public int RefreshRate { get { return RefreshRateDefault; } set { RefreshRateDefault = value; } }
@@ -37,8 +37,6 @@ namespace KerbalCombatSystems
         [GameParameters.CustomParameterUI("Allow Withdrawl", 
         toolTip = "Whether ships are allowed retreat from battle")]
         public bool VeryDishonourable = true;
-
-
 
         public override void SetDifficultyPreset(GameParameters.Preset preset)
         {

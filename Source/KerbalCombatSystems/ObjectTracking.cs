@@ -75,10 +75,6 @@ namespace KerbalCombatSystems
                     OreScanner.MaxAbundanceAltitude = 100000;//100km
                     UpdateButtons(SpinAnims[1], SpinAnims[0]);
                     break;
-                /*case "Dome":
-                    detectionRange = 250f * ScalingFactor;
-                    OreScanner.MaxAbundanceAltitude = 30000;//30km
-                    break;*/
                 default:
                     Debug.Log("variant not found");
                     //it's a non-variant scanner, no need to modify ranges
@@ -88,41 +84,7 @@ namespace KerbalCombatSystems
 
         private void UpdateButtons(ModuleAnimationGroup EnabledAnim, ModuleAnimationGroup DisabledAnim)
         {
-            // SpinAnims[0].moduleIsEnabled = SensorSize == "Medium";
-            // SpinAnims[1].moduleIsEnabled = SensorSize == "Short";
-            //SpinAnims[0].deployActionName
-
-            EnabledAnim.enabled = true;
-
-            EnabledAnim.Fields["Deploy <<1>>"].guiActive = true;
-            EnabledAnim.Fields["Retract <<1>>"].guiActive = true;
-            EnabledAnim.Fields["Deploy <<1>>"].guiActiveEditor = true;
-            EnabledAnim.Fields["Retract <<1>>"].guiActiveEditor = true;
-
-
-            /*SpinAnims[0].Events["Deploy <<1>>"].guiActive = SensorSize == "Medium";
-            SpinAnims[0].Events["Retract <<1>>"].guiActive = SensorSize == "Medium";
-            SpinAnims[0].Events["Deploy <<1>>"].guiActiveEditor = SensorSize == "Medium";
-            SpinAnims[0].Events["Retract <<1>>"].guiActiveEditor = SensorSize == "Medium";*/
-
-            //Debug.Log(SpinAnims[0].deployActionName);//returns above values
-            //Debug.Log(SpinAnims[0].retractActionName);//returns above values
-
-            RefreshAssociatedWindows(part);
-        }
-
-        public static void RefreshAssociatedWindows(Part part)
-        {
-            IEnumerator<UIPartActionWindow> window = FindObjectsOfType(typeof(UIPartActionWindow)).Cast<UIPartActionWindow>().GetEnumerator();
-            while (window.MoveNext())
-            {
-                if (window.Current == null) continue;
-                if (window.Current.part == part)
-                {
-                    window.Current.displayDirty = true;
-                }
-            }
-            window.Dispose();
+            //todo: hide overlapping animations using code
         }
     }
 }
