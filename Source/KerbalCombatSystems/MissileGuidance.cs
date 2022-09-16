@@ -199,9 +199,9 @@ namespace KerbalCombatSystems
 
             fc.alignmentToleranceforBurn = previousTolerance;
 
-            // Remove end cap. todo: will need to change to support cluster missiles.
-            List<ModuleDecouple> decouplers = vessel.FindPartModulesImplementing<ModuleDecouple>();
-            decouplers.ForEach(d => d.Decouple());
+            // Remove end cap. 
+            List<Seperator> couplers = FindDecouplerChildren(vessel.rootPart, "default", false);
+            couplers.ForEach(d => d.Separate());
 
             // initialise debug line renderer
             targetLine = KCSDebug.CreateLine(Color.magenta);

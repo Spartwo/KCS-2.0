@@ -38,8 +38,7 @@ namespace KerbalCombatSystems
 
         public static string[] types = { "Missile", "Rocket", "Firework", "Bomb", "MassCannon" };
         public static string[] massTypes = { "Missile", "Rocket", "Bomb" };
-        //public static string[] projectileTypes = { "Rocket", "Firework" };
-        public static string[] projectileTypes = { "Firework" };
+        public static string[] projectileTypes = { "Rocket", "Firework" };
 
         public ModuleWeapon typeModule;
 
@@ -373,7 +372,9 @@ namespace KerbalCombatSystems
                 if (massTypes.Contains(weaponType))
                     CalculateMass();
 
-                CountChildDecouplers();
+
+                Part Coupler = FindDecoupler(part, "Weapon", true).part; // todo: set to false later
+                int childDecouplers = FindDecouplerChildren(Coupler, "Weapon", false).Count;
             }
         }
 
@@ -395,20 +396,6 @@ namespace KerbalCombatSystems
 
             mass = (float)Math.Round(totalMass, 2);
             return totalMass;
-        }
-
-        private void CountChildDecouplers()
-        {
-            Part parent;
-            var decoupler = FindDecoupler(part, "Weapon", true); // todo: set to false later
-
-            if (decoupler != null)
-                parent = decoupler.part;
-            else 
-                parent = part.parent;
-
-            var parts = parent.FindChildParts<Part>(true).ToList();
-            childDecouplers = parts.FindAll(p => p.HasModuleImplementing<ModuleDecouple>()).Count;
         }
 
         public float CalculateAcceleration()
@@ -438,7 +425,6 @@ namespace KerbalCombatSystems
         public void Setup()
         {
             string moduleName;
-
             switch (weaponType)
             {
                 case "Missile":
