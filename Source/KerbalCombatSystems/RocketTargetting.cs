@@ -24,7 +24,8 @@ namespace KerbalCombatSystems
         Vector3 AimVector;
 
         // Debugging line variables.
-        LineRenderer TargetLine, LeadLine, AimLine;
+        //LineRenderer TargetLine, LeadLine, AimLine;
+        LineRenderer AimLine;
 
         // Rocket decoupler variables
         private List<ModuleDecouple> RocketBases;
