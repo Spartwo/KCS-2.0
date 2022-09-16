@@ -27,15 +27,21 @@ namespace KerbalCombatSystems
         private Vector2 scrollPosition;
         GUIStyle buttonStyle;
 
+        //relavent game settings
+        private int RefreshRate;
+
         private string[] modes = { "Ships", "Weapons" };
         private string mode = "Ships";
 
         public List<ModuleShipController> ships;
+        public List<ModuleWeaponController> weaponsInFlight;
         private float lastUpdateTime;
 
         List<ModuleWeaponController> weaponList;
         ModuleWeaponController selectedWeapon;
         //public List<KCSShip> ships;
+
+        private Vessel currentVessel;
 
         private void Start()
         {
@@ -46,6 +52,8 @@ namespace KerbalCombatSystems
 
             AddToolbarButton();
 
+            RefreshRate = HighLogic.CurrentGame.Parameters.CustomParams<KCSCombat>().RefreshRate;
+
             // Register vessel updates.
 
             UpdateWeaponList();
@@ -54,6 +62,25 @@ namespace KerbalCombatSystems
             GameEvents.onVesselDestroy.Add(VesselEventUpdate);
             GameEvents.onVesselGoOffRails.Add(VesselEventUpdate);
             GameEvents.onVesselGoOnRails.Add(VesselEventUpdate);
+        }
+
+        private void Update()
+        {
+            ManageThrottle();
+        }
+
+        private void ManageThrottle()
+        {
+            Vessel CurrentCraft = FlightGlobals.ActiveVessel;
+            if (CurrentCraft == null) return;
+
+            bool fcRunning = !CurrentCraft.ActionGroups[KSPActionGroup.SAS] && CurrentCraft.Autopilot.Mode == VesselAutopilot.AutopilotMode.Normal;
+            if (fcRunning || currentVessel != CurrentCraft)
+            {
+                FlightInputHandler.state.mainThrottle = CurrentCraft.ctrlState.mainThrottle;
+            }
+
+            currentVessel = CurrentCraft;
         }
 
         void OnDestroy()
@@ -66,7 +93,7 @@ namespace KerbalCombatSystems
 
         private void VesselEventUpdate(Vessel v)
         {
-            if (Time.time - lastUpdateTime < 5)
+            if (Time.time - lastUpdateTime < RefreshRate)
             {
                 lastUpdateTime = Time.time;
                 return;
@@ -78,9 +105,9 @@ namespace KerbalCombatSystems
 
         private IEnumerator UpdateShipListCountdown()
         {
-            while (Time.time - lastUpdateTime < 5)
+            while (Time.time - lastUpdateTime < RefreshRate)
             {
-                yield return new WaitForSecondsRealtime(5);
+                yield return new WaitForSecondsRealtime(RefreshRate);
             }
             
             UpdateShipList();
@@ -92,29 +119,37 @@ namespace KerbalCombatSystems
 
             var loadedVessels = FlightGlobals.VesselsLoaded;
             ships = new List<ModuleShipController>();
+            weaponsInFlight = new List<ModuleWeaponController>();
             //ships = new List<KCSShip>();
 
             foreach (Vessel v in loadedVessels)
             {
                 var p = v.FindPartModuleImplementing<ModuleShipController>();
-                if (p == null) continue;
+                if (p != null)
+                {
+                    ships.Add(p);   
+                    continue;
+                }
 
-                ships.Add(p);
+                var w = v.FindPartModuleImplementing<ModuleWeaponController>();
+                if (w != null && w.launched && !w.missed && !w.isInterceptor)
+                    weaponsInFlight.Add(w);
+
                 //ships.Add(new KCSShip(v, v.GetTotalMass())); // todo: Should update mass instead
             }
         }
 
         private void UpdateWeaponList()
         {
-            var c = FlightGlobals.ActiveVessel.FindPartModuleImplementing<ModuleShipController>();
-            if (c == null)
+            var Craft = FlightGlobals.ActiveVessel.FindPartModuleImplementing<ModuleShipController>();
+            if (Craft == null)
             {
                 weaponList = new List<ModuleWeaponController>();
                 return;
             };
 
-            c.CheckWeapons();
-            weaponList = c.weapons;
+            Craft.CheckWeapons();
+            weaponList = Craft.weapons;
 
             // need to sort by distance from root part so that we don't fire bumper torpedos.
             //weaponList.OrderBy(m => m.vessel.parts.FindIndex 
@@ -128,9 +163,14 @@ namespace KerbalCombatSystems
 
         public void ToggleAIs()
         {
+            bool running = ships.FindIndex(c => c.controllerRunning) > -1;
+
             foreach (var controller in ships)
             {
-                controller.ToggleAI();
+                if (running)
+                    controller.StopAI();
+                else
+                    controller.StartAI();
             }
         }
 
@@ -148,8 +188,7 @@ namespace KerbalCombatSystems
 
         void OnGUI()
         {
-            // todo: don't draw when UI is hidden
-            if (guiEnabled) DrawGUI();
+            if (guiEnabled && KCSDebug.ShowUI) DrawGUI();
         }
 
         private void DrawGUI() =>
@@ -202,24 +241,29 @@ namespace KerbalCombatSystems
             if (ships.Count > 0)
             {
                 Vessel v;
+                ModuleShipController c;
 
                 foreach (var controller in ships)
                 {
-                    v = controller.vessel;
+                    c = controller; 
+                    v = c.vessel;
 
-                    string colour = v == FlightGlobals.ActiveVessel ? "#fabe32" : "#FFFFFF";
-
+                    string colour = "#ffffff";
                     var activeTarget = FlightGlobals.ActiveVessel.targetObject;
-                    if (activeTarget != null)
-                        colour = v == activeTarget.GetVessel() ? "#b4ff33" : colour;
 
-                    string targetName = controller.target == null ? "None" : controller.target.vesselName;
-                    string craftName = String.Format("<color={6}>{0}</color>\n<color=#808080ff>Part Count: {1}, Mass: {2} t\nAlive: {3}, Target: {4}\nState: {5}</color>",
-                        v.GetDisplayName(), v.parts.Count, Math.Round(v.GetTotalMass(), 1), controller.alive, targetName, controller.state, colour);
+                    if (!c.alive)
+                        colour = "#808080";
+                    else if (v == FlightGlobals.ActiveVessel)
+                        colour = "#00f2ff";
+                    else if (activeTarget != null && v == activeTarget.GetVessel())
+                        colour = "#b4ff33";
 
-                    string AI = String.Format("<color={0}>AI</color>", controller.controllerRunning ? "#07D207" : "#FFFFFF");
+                    string targetName = c.target == null ? "None" : c.target.vesselName;
+                    string craftName = String.Format("<color={6}>{0}</color>\n<color=#808080ff>Part Count: {1}, Mass: {2} t, IR: {7}\nTarget: {4}\nState: {5}</color>",
+                        v.GetDisplayName(), v.parts.Count, Math.Round(v.GetTotalMass(), 1), null, targetName, c.state, colour, Math.Round(c.heatSignature));
 
                     GUILayout.BeginHorizontal();
+
                     if (GUILayout.Button(craftName, GUILayout.Width(windowWidth * 0.8f)))
                     {
                         FlightGlobals.ForceSetActiveVessel(v);
@@ -227,16 +271,23 @@ namespace KerbalCombatSystems
                     }
 
                     GUILayout.BeginVertical();
+
+                    string AI = String.Format("<color={0}>AI</color>", controller.controllerRunning ? "#07D207" : "#FFFFFF");
                     if (GUILayout.Button(AI))
                     {
-                        controller.ToggleAI();
+                        c.ToggleAI();
                     }
                     if (GUILayout.Button(String.Format("<color={1}>{0}</color>", controller.side, controller.side == Side.A ? "#0AACE3" : "#E30A0A")))
                     {
-                        controller.ToggleSide();
+                        c.ToggleSide();
                     }
-                    GUILayout.EndVertical();
+                    if (GUILayout.Button(String.Format("<color={0}>Camera</color>", controller.side, controller.side == Side.A ? "#0AACE3" : "#E30A0A")))
+                    {
+                        //todo:camera call
+                        //   controller.ToggleCam();
+                    }
 
+                    GUILayout.EndVertical();
                     GUILayout.EndHorizontal();
                 }
             }
@@ -270,8 +321,15 @@ namespace KerbalCombatSystems
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
 
-            if (GUILayout.Button("Update List")) UpdateWeaponList();
-            if (GUILayout.Button("Fire")) FireSelectedWeapon();
+            if (GUILayout.Button("Update List"))
+            {
+                UpdateWeaponList();
+            }
+            if (GUILayout.Button("Fire"))
+            {
+                FireSelectedWeapon();
+                UpdateWeaponList();
+            }
         }
 
         // Application launcher/Toolbar setup.
