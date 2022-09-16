@@ -87,6 +87,8 @@ namespace KerbalCombatSystems
             throttleLerped = Mathf.MoveTowards(throttleLerped, throttleActual, throttleLerpRate * Time.fixedDeltaTime);
 
             v.ctrlState.mainThrottle = throttleLerped;
+
+            //commented out as responsible for vessel switching bug
             //if (FlightGlobals.ActiveVessel != null && v == FlightGlobals.ActiveVessel)
             //    FlightInputHandler.state.mainThrottle = throttleLerped; //so that the on-screen throttle gauge reflects the autopilot throttle
         }
@@ -134,10 +136,13 @@ namespace KerbalCombatSystems
 
             // The offline SAS must not be on stability assist. Normal seems to work on most probes.
             if (ap.Mode != VesselAutopilot.AutopilotMode.Normal)
+            {
                 ap.SetMode(VesselAutopilot.AutopilotMode.Normal);
+            }
 
             // Lerp attitude while burning to reduce instability.
-            if (lerpAttitude) {
+            if (lerpAttitude)
+            {
                 angleLerp = Mathf.InverseLerp(0, 10, error);
                 lerpRate = Mathf.Lerp(1, 10, angleLerp);
                 attitudeLerped = Vector3.Lerp(attitudeLerped, attitude, lerpRate * Time.deltaTime);

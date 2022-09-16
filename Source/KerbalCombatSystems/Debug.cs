@@ -15,8 +15,16 @@ namespace KerbalCombatSystems
     public class KCSDebug : MonoBehaviour
     {
         public static bool ShowLines;
+        public static bool ShowUI;
+
+        //used to track if the debug lines were showing prior
+        private bool ShowLinesDebug;
+
         private static List<LineRenderer> lines;
         private static List<float> times;
+
+        //relavent game settings
+        private int RefreshRate;
 
         private void Start()
         {
@@ -24,6 +32,7 @@ namespace KerbalCombatSystems
             lines = new List<LineRenderer>();
             times = new List<float>();
             StartCoroutine(LineCleaner());
+            RefreshRate = HighLogic.CurrentGame.Parameters.CustomParams<KCSCombat>().RefreshRate;
         }
 
         private void Update()
@@ -102,8 +111,21 @@ namespace KerbalCombatSystems
                     lines[i].positionCount = 0;
                 }
 
-                yield return new WaitForSeconds(5);
+                yield return new WaitForSeconds(RefreshRate);
             }
+        }
+
+        private void OnHideUI()
+        {
+            ShowLinesDebug = ShowLines;
+            ShowLines = false;
+            ShowUI = false;
+        }
+
+        private void OnShowUI()
+        {
+            if (ShowLinesDebug) ShowLines = true;
+            ShowUI = true;
         }
     }
 }

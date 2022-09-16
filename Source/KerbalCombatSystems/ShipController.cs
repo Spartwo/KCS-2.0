@@ -17,7 +17,7 @@ namespace KerbalCombatSystems
 
         const string shipControllerGroupName = "Ship AI";
         public bool controllerRunning = false;
-        public float updateInterval = 2f;
+        public float updateInterval;
         public float firingAngularVelocityLimit = 1; // degrees per second
 
         // Robotics tracking variables
@@ -175,6 +175,8 @@ namespace KerbalCombatSystems
 
             if (HighLogic.LoadedSceneIsFlight)
             {
+                updateInterval = HighLogic.CurrentGame.Parameters.CustomParams<KCSCombat>().RefreshRate;
+
                 fc = part.gameObject.AddComponent<KCSFlightController>();
                 fc.alignmentToleranceforBurn = 7.5f;
                 fc.throttleLerpRate = 3;
