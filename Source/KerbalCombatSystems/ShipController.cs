@@ -817,7 +817,7 @@ namespace KerbalCombatSystems
             if (sensors.Count < 1)
                 maxDetectionRange = 1000;
             else
-                maxDetectionRange = sensors.Max(s => s.detectionRange);
+                maxDetectionRange = sensors.Max(s => s.DetectionRange);
 
             //if the sensors aren't deployed and the AI is running
             if(!DeployedSensors && controllerRunning)

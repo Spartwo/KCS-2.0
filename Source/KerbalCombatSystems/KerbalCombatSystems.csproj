@@ -83,6 +83,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataLink.cs" />
     <Compile Include="ClosestTimeToCPA.cs" />
     <Compile Include="MassCannonTargeting.cs" />
     <Compile Include="BombGuidance.cs" />
@@ -91,7 +92,8 @@
     <Compile Include="CombatRobotics.cs" />
     <Compile Include="DecouplerDesignator.cs" />
     <Compile Include="EscapePod.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="MainController.cs" />
     <Compile Include="FireworkTargeting.cs" />
