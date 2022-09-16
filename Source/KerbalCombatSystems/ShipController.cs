@@ -18,6 +18,7 @@ namespace KerbalCombatSystems
         const string shipControllerGroupName = "Ship AI";
         public bool controllerRunning = false;
         public float updateInterval;
+        private bool VeryDishonourable;
         public float firingAngularVelocityLimit = 1; // degrees per second
 
         // Robotics tracking variables
@@ -161,6 +162,9 @@ namespace KerbalCombatSystems
             CheckWeapons();
             shipControllerCoroutine = StartCoroutine(ShipController());
             controllerRunning = true;
+
+            VeryDishonourable = HighLogic.CurrentGame.Parameters.CustomParams<KCSCombat>().VeryDishonourable;
+            updateInterval = HighLogic.CurrentGame.Parameters.CustomParams<KCSCombat>().RefreshRate;
         }
 
         public void StopAI()
@@ -306,7 +310,7 @@ namespace KerbalCombatSystems
             //Debug.Log($"[KCS]: Update {updateCount} for {vessel.GetDisplayName()}.");
 
             // Movement.
-            if (hasPropulsion && !hasWeapons && CheckWithdraw())
+            if (hasPropulsion && !hasWeapons && CheckWithdraw() && VeryDishonourable)
             {
                 state = "Withdrawing";
 
