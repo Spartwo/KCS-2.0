@@ -9,53 +9,6 @@ namespace KerbalCombatSystems
 {
     public static partial class KCS
     {
-        public static Seperator FindDecoupler(Part origin, string type, bool ignoreTypeRequirement)
-        {
-            Part currentPart;
-            Part nextPart = origin.parent;
-            ModuleDecouple Decoupler;
-            ModuleDockingNode port;
-            ModuleDecouplerDesignate module;
-
-            if (nextPart == null) return null;
-
-            for (int i = 0; i < 99; i++)
-            {
-                currentPart = nextPart;
-                nextPart = currentPart.parent;
-
-                if (nextPart == null) break;
-
-                Decoupler = currentPart.GetComponent<ModuleDecouple>();
-                port = currentPart.GetComponent<ModuleDockingNode>();
-
-                if (Decoupler == null && port == null) continue;
-                Seperator sep = new Seperator();
-
-                if (Decoupler != null)
-                {
-                    if (currentPart.GetComponent<ModuleDecouple>().isDecoupled == true) continue;
-
-                    module = currentPart.GetComponent<ModuleDecouplerDesignate>();
-                    if (module == null) continue;
-
-                    if (module.DecouplerType != type && !ignoreTypeRequirement) continue;
-
-                    sep.decoupler = Decoupler;
-                }
-                else
-                {
-                    sep.port = port;
-                    sep.isDockingPort = true;
-                }
-
-                sep.part = currentPart;
-                return sep;
-            }
-
-            return null;
-        }
-
         public static float VesselDistance(Vessel v1, Vessel v2)
         {
             return (v1.transform.position - v2.transform.position).magnitude;
@@ -64,17 +17,18 @@ namespace KerbalCombatSystems
         public static float GetMaxAcceleration(Vessel v)
         {
             List<ModuleEngines> Engines = v.FindPartModulesImplementing<ModuleEngines>();
-            float thrust = Engines.Sum(e => e.MaxThrustOutputVac(true));
+            float Thrust = Engines.Sum(e => e.MaxThrustOutputVac(true));
 
-            /*List<ModuleRCSFX> RCS = v.FindPartModulesImplementing<ModuleRCSFX>();
+            List<ModuleRCSFX> RCS = v.FindPartModulesImplementing<ModuleRCSFX>();
             foreach (ModuleRCSFX Thruster in RCS)
             {
-            // check fore by throttle
-                if (Thruster.useThrottle)
+                if (Thruster.useThrottle == true)
+                {
                     Thrust += Thruster.thrusterPower;
-            }*/
+                }
+            }
 
-            return thrust / v.GetTotalMass();
+            return Thrust / v.GetTotalMass();
         }
 
         public static bool RayIntersectsVessel(Vessel v, Ray r)
@@ -101,6 +55,7 @@ namespace KerbalCombatSystems
             float c = Vector3.Dot(RelPos, RelPos);
 
             float desc = b * b - 4f * a * c;
+
             float ForwardDelta = 2f * c / (Mathf.Sqrt(desc) - b);
 
             Vector3 leadPosition = Target.transform.position + RelVel * ForwardDelta;
@@ -141,30 +96,111 @@ namespace KerbalCombatSystems
             //do nothing otherwise
         }
 
-        public static List<ModuleDecouple> FindDecouplerChildren(Part Root, string type, bool ignoreTypeRequirement)
-        {   
+        public static List<Seperator> FindDecouplerChildren(Part Root, string type, bool ignoreTypeRequirement)
+        {
             //run through all child parts of the controllers parent for decoupler modules
             List<Part> ChildParts = Root.FindChildParts<Part>(true).ToList();
             //check the parent itself
             ChildParts.Add(Root);
-            //spawn empty modules list to add to
-            List<ModuleDecouple> DecouplerList = new List<ModuleDecouple>();
 
+            //spawn empty modules list to add to
+            List<Seperator> SeperatorList = new List<Seperator>();
+            ModuleDecouplerDesignate Module;
+
+            ModuleDecouple Decoupler;
+            ModuleDockingNode DockingPort;
 
             foreach (Part CurrentPart in ChildParts)
             {
-                ModuleDecouplerDesignate Module = CurrentPart.GetComponent<ModuleDecouplerDesignate>();
+                Module = CurrentPart.GetComponent<ModuleDecouplerDesignate>();
 
-                //check for decoupler modules on the part of the correct type and add to a list
-                if (CurrentPart.GetComponent<ModuleDecouple>() == null)     continue;
-                if (CurrentPart.GetComponent<ModuleDecouple>().isDecoupled == true) continue;
-                if (Module == null)                                         continue;
+                //check current part for either the docking port or the decoupler module
+                Decoupler = CurrentPart.GetComponent<ModuleDecouple>();
+                DockingPort = CurrentPart.GetComponent<ModuleDockingNode>();
+
+                //move to next part if neither are found
+                if (Decoupler == null && DockingPort == null) continue;
+                Seperator seperator = new Seperator();
+
+                //get the designator module and move to next part if it is not the correct type
+                Module = CurrentPart.GetComponent<ModuleDecouplerDesignate>();
+                if (Module == null) continue;
                 if (Module.DecouplerType != type && !ignoreTypeRequirement) continue;
 
-                DecouplerList.Add(CurrentPart.GetComponent<ModuleDecouple>());
+                //cases for if it is a decoupler or a docking port
+                if (Decoupler != null)
+                {
+                    //ensure it's not already been fired
+                    if (CurrentPart.GetComponent<ModuleDecouple>().isDecoupled == true) continue;
+
+                    seperator.decoupler = Decoupler;
+                }
+                else
+                {
+                    //todo: skip if attached to another parent docking port
+
+                    seperator.port = DockingPort;
+                    seperator.isDockingPort = true;
+                }
+
+                seperator.part = CurrentPart;
+                SeperatorList.Add(seperator);
             }
-            
-            return DecouplerList;
+
+            return SeperatorList;
+        }
+
+        public static Seperator FindDecoupler(Part origin, string type, bool ignoreTypeRequirement)
+        {
+            Part CurrentPart;
+            Part NextPart = origin.parent;
+            ModuleDecouple Decoupler;
+            ModuleDockingNode DockingPort;
+            ModuleDecouplerDesignate Module;
+
+            if (NextPart == null) return null;
+
+            for (int i = 0; i < 99; i++)
+            {
+                CurrentPart = NextPart;
+                NextPart = CurrentPart.parent;
+
+                //if there are no more parts to check end the sequence
+                if (NextPart == null) break;
+
+                //check current part for either the docking port or the decoupler module
+                Decoupler = CurrentPart.GetComponent<ModuleDecouple>();
+                DockingPort = CurrentPart.GetComponent<ModuleDockingNode>();
+
+                //move to next part if neither are found
+                if (Decoupler == null && DockingPort == null) continue;
+                Seperator seperator = new Seperator();
+
+                //get the designator module and move to next part if it is not the correct type
+                Module = CurrentPart.GetComponent<ModuleDecouplerDesignate>();
+                if (Module == null) continue;
+                if (Module.DecouplerType != type && !ignoreTypeRequirement) continue;
+
+
+                //cases for if it is a decoupler or a docking port
+                if (Decoupler != null)
+                {
+                    //ensure it's not already been fired
+                    if (CurrentPart.GetComponent<ModuleDecouple>().isDecoupled == true) continue;
+
+                    seperator.decoupler = Decoupler;
+                }
+                else
+                {
+                    seperator.port = DockingPort;
+                    seperator.isDockingPort = true;
+                }
+
+                seperator.part = CurrentPart;
+                return seperator;
+            }
+
+            return null;
         }
 
         public static Vector3 FromTo(Vessel v1, Vessel v2)
@@ -231,6 +267,11 @@ namespace KerbalCombatSystems
             name = name.Replace("Light ", "");
             name = name.Replace("Frigate", "");
             name = name.Replace("Destroyer", "");
+            name = name.Replace("Cruiser", "");
+            name = name.Replace("Dreadnought", "");
+            name = name.Replace("Corvette", "");
+            name = name.Replace("Carrier", "");
+            name = name.Replace("Battleship", "");
             name = name.Replace("Fighter", "");
             name = name.Replace("  ", " ");
             name = name.Trim();
