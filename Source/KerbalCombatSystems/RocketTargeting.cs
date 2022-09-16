@@ -28,8 +28,8 @@ namespace KerbalCombatSystems
         LineRenderer AimLine;
 
         // Rocket decoupler variables
-        private List<ModuleDecouple> RocketBases;
-        ModuleDecouple Decoupler;
+        private List<Seperator> RocketBases;
+        Seperator Decoupler;
         Vector3 Origin;
 
 
@@ -62,8 +62,6 @@ namespace KerbalCombatSystems
                 AvgVel = RocketVelocity(LeadVector, Decoupler.part);
 
                 // Update debug lines.
-                //KCSDebug.PlotLine(new[] { Origin, Target.transform.position }, TargetLine);
-                //KCSDebug.PlotLine(new[] { Origin, LeadVector }, LeadLine);
                 KCSDebug.PlotLine(new[] { Origin, AimVector }, AimLine);
             }
 
@@ -101,7 +99,7 @@ namespace KerbalCombatSystems
 
             //wait a frame before decoupling to ensure engine activation(may not be required)
             yield return null;
-            Decoupler.Decouple();
+            Decoupler.Separate();
 
             Firing = false;
         }
@@ -150,8 +148,6 @@ namespace KerbalCombatSystems
 
         public void OnDestroy()
         {
-            //KCSDebug.DestroyLine(TargetLine);
-            //KCSDebug.DestroyLine(LeadLine);
             KCSDebug.DestroyLine(AimLine);
         }
         
