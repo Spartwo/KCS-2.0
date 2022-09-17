@@ -67,13 +67,14 @@ namespace KerbalCombatSystems
                 Debug.Log("[KCS]: Couldn't find decoupler on " + vessel.GetName() + " (Escape Pod)");
             }
 
-            // set target orientation to away from the vessel by default
             fc = part.gameObject.AddComponent<KCSFlightController>();
 
             yield return new WaitForFixedUpdate(); // wait a frame
+            //get an onboard probe core to control from
             FindCommand(vessel).MakeReference();
+            fc.attitude = vessel.ReferenceTransform.up;
 
-            // turn on engines and create list
+            //turn on engines and create list
             Engines = vessel.FindPartModulesImplementing<ModuleEngines>();
             foreach (ModuleEngines Engine in Engines)
             {
@@ -81,13 +82,13 @@ namespace KerbalCombatSystems
             }
 
             // enable autopilot and set target orientation to away from the vessel by default
-            fc.throttleLerpRate = 100;
+            fc.throttleLerpRate = 99;
+            fc.lerpAttitude = false;
             fc.throttle = 1;
-            fc.alignmentToleranceforBurn = 10;
-            fc.attitude = vessel.ReferenceTransform.up;
+            fc.alignmentToleranceforBurn = 30;
             fc.Drive();
 
-            // turn on engines
+            //deploy all parachutes
             List<ModuleParachute> Parachutes = vessel.FindPartModulesImplementing<ModuleParachute>();
             foreach (ModuleParachute Parachute in Parachutes)
             {

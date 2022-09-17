@@ -96,6 +96,21 @@ namespace KerbalCombatSystems
         public float terminalVelocity = 300f;
 
         [KSPField(isPersistant = true,
+              guiActive = true,
+              guiActiveEditor = true,
+              guiName = "Proximity Timer",
+              guiUnits = "Seconds",
+              groupName = missileGroupName,
+              groupDisplayName = missileGroupName),
+              UI_FloatRange(
+                  minValue = 0.01f,
+                  maxValue = 5f,
+                  stepIncrement = 0.01f,
+                  scene = UI_Scene.All
+              )]
+        public float warheadTimer = 2f;
+
+        [KSPField(isPersistant = true,
             guiActive = true,
             guiActiveEditor = true,
             guiName = "Use for Interception",

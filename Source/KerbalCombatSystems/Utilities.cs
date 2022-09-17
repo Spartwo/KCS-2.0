@@ -22,7 +22,7 @@ namespace KerbalCombatSystems
             List<ModuleRCSFX> RCS = v.FindPartModulesImplementing<ModuleRCSFX>();
             foreach (ModuleRCSFX Thruster in RCS)
             {
-                if (Thruster.useThrottle == true)
+                if (Thruster.useThrottle && !Thruster.flameout)
                 {
                     Thrust += Thruster.thrusterPower;
                 }

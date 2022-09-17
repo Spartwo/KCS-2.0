@@ -22,6 +22,7 @@ namespace KerbalCombatSystems
         private ModuleWeaponController targetWeapon;
         private bool isInterceptor;
         private int shutoffDistance;
+        private float WarheadFuse;
 
         // Missile guidance variables.
 
@@ -60,16 +61,10 @@ namespace KerbalCombatSystems
         private IEnumerator Launch()
         {
             // find decoupler
-            //decoupler = FindDecoupler(part, "Weapon", true);
             seperator = FindDecoupler(part, "Weapon", true);
 
             bool frontLaunch = Vector3.Dot(seperator.transform.up, vessel.ReferenceTransform.up) > 0.99;
             controller.frontLaunch = frontLaunch;
-
-            // todo:
-            // electric charge check
-            // fuel check
-            // propulsion check
 
             double separatorMaxtemp = 2000;
 
@@ -78,19 +73,22 @@ namespace KerbalCombatSystems
             {
                 seperator.Separate();
                 separatorMaxtemp = part.maxTemp;
-                seperator.part.maxTemp = double.MaxValue;
+                seperator.part.maxTemp = double.MaxValue;//very unbased, hatbat
             }
             else
+            {
                 Debug.Log("[KCS]: Couldn't find decoupler.");
-
-            // turn on engines
-            engines = vessel.FindPartModulesImplementing<ModuleEngines>();
-            engines.ForEach(e => e.Activate());
-            mainEngine = engines.First();
-            mainEnginePart = mainEngine.part;
+            }
 
             // Setup flight controller.
             fc = part.gameObject.AddComponent<KCSFlightController>();
+            yield return new WaitForFixedUpdate(); // wait a frame
+            
+            //get an onboard probe core to control from
+            FindCommand(vessel).MakeReference();
+            fc.attitude = vessel.ReferenceTransform.up;
+
+            //set flight controller settings
             fc.alignmentToleranceforBurn = isInterceptor ? 60 : 20;
             fc.lerpAttitude = false;
             fc.throttleLerpRate = 99;
@@ -98,21 +96,21 @@ namespace KerbalCombatSystems
             fc.RCSPower = 20;
             fc.Drive();
 
-            //get an onboard probe core to control from
-            FindCommand(vessel).MakeReference();
-            fc.attitude = vessel.ReferenceTransform.up;
+            // turn on engines
+            engines = vessel.FindPartModulesImplementing<ModuleEngines>();
+            engines.ForEach(e => e.Activate());
 
             //enable RCS for translation
             if (!vessel.ActionGroups[KSPActionGroup.RCS])
                 vessel.ActionGroups.SetGroup(KSPActionGroup.RCS, true);
 
             // turn on rcs thrusters
-            var Thrusters = vessel.FindPartModulesImplementing<ModuleRCS>();
-            Thrusters.ForEach(t => t.rcsEnabled = true);
+            List<ModuleRCSFX> Thrusters = vessel.FindPartModulesImplementing<ModuleRCSFX>();
+            Thrusters.ForEach(Thruster => Thruster.rcsEnabled = true);
 
             // Turn on reaction wheels.
-            var wheels = vessel.FindPartModulesImplementing<ModuleReactionWheel>();
-            wheels.ForEach(w => w.wheelState = ModuleReactionWheel.WheelState.Active);
+            List<ModuleReactionWheel> wheels = vessel.FindPartModulesImplementing<ModuleReactionWheel>();
+            wheels.ForEach(wheel => wheel.wheelState = ModuleReactionWheel.WheelState.Active);
 
             // wait to try to prevent destruction of decoupler.
             // todo: could increase heat tolerance temporarily or calculate a lower throttle.
@@ -200,7 +198,7 @@ namespace KerbalCombatSystems
             fc.alignmentToleranceforBurn = previousTolerance;
 
             // Remove end cap. 
-            List<Seperator> couplers = FindDecouplerChildren(vessel.rootPart, "default", false);
+            List<Seperator> couplers = FindDecouplerChildren(vessel.rootPart, "Default", false);
             couplers.ForEach(d => d.Separate());
 
             // initialise debug line renderer
@@ -311,16 +309,19 @@ namespace KerbalCombatSystems
             targetVectorNormal = interceptVector.normalized;
 
             accuracy = Vector3.Dot(targetVectorNormal, relVelNrm);
-            if (targetVector.magnitude < shutoffDistance 
-                || ((mainEngine == null 
-                || !mainEngine.isOperational 
-                || mainEngine == null
-                || mainEnginePart.vessel != vessel) 
-                && accuracy < 0.99))
+            if (targetVector.magnitude < shutoffDistance || (GetMaxAcceleration(part.vessel) <= 0 && accuracy < 0.99 ))
             {
                 StopGuidance();
                 return;
             }
+
+            if (timeToHit < WarheadFuse)
+            {
+                //pop warhead 
+                List<Seperator> couplers = FindDecouplerChildren(vessel.rootPart, "Warhead", false);
+                couplers.ForEach(d => d.Separate());
+            }
+
 
             drift = accuracy > 0.999999
                 && (Vector3.Dot(relVel, targetVectorNormal) > terminalVelocity || isInterceptor);
@@ -351,6 +352,7 @@ namespace KerbalCombatSystems
             if (controller.target == null && vessel.targetObject == null) return;
             target = controller.target ?? vessel.targetObject.GetVessel();
 
+            WarheadFuse = controller.warheadTimer;
             terminalVelocity = controller.terminalVelocity;
             isInterceptor = controller.isInterceptor;
             targetWeapon = controller.targetWeapon;
