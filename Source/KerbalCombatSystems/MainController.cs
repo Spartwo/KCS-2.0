@@ -275,17 +275,17 @@ namespace KerbalCombatSystems
                     string AI = String.Format("<color={0}>AI</color>", controller.controllerRunning ? "#07D207" : "#FFFFFF");
                     if (GUILayout.Button(AI))
                     {
-                        c.ToggleAI();
+                        controller.ToggleAI();
                     }
                     if (GUILayout.Button(String.Format("<color={1}>{0}</color>", controller.side, controller.side == Side.A ? "#0AACE3" : "#E30A0A")))
                     {
-                        c.ToggleSide();
+                        controller.ToggleSide();
                     }
-                    if (GUILayout.Button(String.Format("<color={0}>Camera</color>", controller.side, controller.side == Side.A ? "#0AACE3" : "#E30A0A")))
+                   /* if (GUILayout.Button(String.Format("<color={0}>Cam</color>", controller.cameraOpen ? "#07D207" : "#FFFFFF")))
                     {
                         //todo:camera call
-                        //   controller.ToggleCam();
-                    }
+                        controller.ToggleCam();
+                    }*/
 
                     GUILayout.EndVertical();
                     GUILayout.EndHorizontal();

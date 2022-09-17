@@ -29,6 +29,10 @@ namespace KerbalCombatSystems
         private void Start()
         {
             ShowLines = false;
+            ShowUI = true;
+            GameEvents.onHideUI.Add(OnHideUI);
+            GameEvents.onShowUI.Add(OnShowUI);
+
             lines = new List<LineRenderer>();
             times = new List<float>();
             StartCoroutine(LineCleaner());
@@ -115,14 +119,14 @@ namespace KerbalCombatSystems
             }
         }
 
-        private void OnHideUI()
+        void OnHideUI()
         {
             ShowLinesDebug = ShowLines;
             ShowLines = false;
             ShowUI = false;
         }
 
-        private void OnShowUI()
+        void OnShowUI()
         {
             if (ShowLinesDebug) ShowLines = true;
             ShowUI = true;

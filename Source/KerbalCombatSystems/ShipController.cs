@@ -78,7 +78,7 @@ namespace KerbalCombatSystems
         [KSPField(isPersistant = true,
             guiActive = true,
             guiActiveEditor = true,
-            guiName = "Manoeuvring Speed",
+            guiName = "Maneuvering Speed",
             guiUnits = "m/s",
             groupName = shipControllerGroupName,
             groupDisplayName = shipControllerGroupName),
@@ -88,7 +88,7 @@ namespace KerbalCombatSystems
                 stepIncrement = 10f,
                 scene = UI_Scene.All
             )]
-        public float manoeuvringSpeed = 100f;
+        public float ManeuveringSpeed = 100f;
 
         [KSPField(isPersistant = true,
             guiActive = true,
@@ -476,7 +476,7 @@ namespace KerbalCombatSystems
 
                 if (currentRange < minRange)
                 {
-                    state = "Manoeuvring (Away)";
+                    state = "Maneuvering (Away)";
                     fc.throttle = 1;
                     float oldAlignment = fc.alignmentToleranceforBurn;
                     fc.alignmentToleranceforBurn = 45;
@@ -484,7 +484,7 @@ namespace KerbalCombatSystems
                     while (UnderTimeLimit() && target != null && !complete)
                     {
                         fc.attitude = FromTo(vessel, target).normalized * -1;
-                        fc.throttle = Vector3.Dot(RelVel(vessel, target), fc.attitude) < manoeuvringSpeed ? 1 : 0;
+                        fc.throttle = Vector3.Dot(RelVel(vessel, target), fc.attitude) < ManeuveringSpeed ? 1 : 0;
                         complete = FromTo(vessel, target).magnitude > minRange;
 
                         yield return new WaitForFixedUpdate();
@@ -504,16 +504,16 @@ namespace KerbalCombatSystems
 
                         if (angle > 45 && relVel.magnitude > maxAcceleration * 2)
                         {
-                            state = "Manoeuvring (Match Velocity)";
+                            state = "Maneuvering (Match Velocity)";
                             fc.attitude = relVel.normalized * -1;
                         }
                         else
                         {
-                            state = "Manoeuvring (Prograde to Target)";
+                            state = "Maneuvering (Prograde to Target)";
                             fc.attitude = Vector3.LerpUnclamped(relVel.normalized, targetVec, 1 + 1 * (relVel.magnitude / maxAcceleration));
                         }
 
-                        fc.throttle = Vector3.Dot(RelVel(vessel, target), fc.attitude) < manoeuvringSpeed ? 1 : 0;
+                        fc.throttle = Vector3.Dot(RelVel(vessel, target), fc.attitude) < ManeuveringSpeed ? 1 : 0;
                         complete = FromTo(vessel, target).magnitude < maxRange;
 
                         yield return new WaitForFixedUpdate();
@@ -523,7 +523,7 @@ namespace KerbalCombatSystems
                 {
                     if (relVel.magnitude > firingSpeed)
                     {
-                        state = "Manoeuvring (Kill Velocity)";
+                        state = "Maneuvering (Kill Velocity)";
 
                         while (UnderTimeLimit() && target != null && !complete)
                         {
@@ -537,7 +537,7 @@ namespace KerbalCombatSystems
                     }
                     else if (target != null && currentProjectile != null && AngularVelocity(vessel, target) > firingAngularVelocityLimit)
                     {
-                        state = "Manoeuvring (Kill Angular Velocity)";
+                        state = "Maneuvering (Kill Angular Velocity)";
 
                         while (UnderTimeLimit() && target != null && !complete)
                         {
@@ -551,7 +551,7 @@ namespace KerbalCombatSystems
                     else
                     {
                         if (hasPropulsion)
-                            state = "Manoeuvring (Drift)";
+                            state = "Maneuvering (Drift)";
                         else
                             state = "Stranded";
 
@@ -809,14 +809,14 @@ namespace KerbalCombatSystems
 
         public bool CheckStatus()
         {
-            hasPropulsion = vessel.FindPartModulesImplementing<ModuleEngines>().FindAll(e => e.EngineIgnited && e.isOperational).Count > 0;
+            hasPropulsion = GetMaxAcceleration(part.vessel) > 0;
             hasWeapons = vessel.FindPartModulesImplementing<ModuleWeaponController>().FindAll(w => w.canFire).Count > 0;
             //bool control = vessel.maxControlLevel != Vessel.ControlLevel.NONE && vessel.angularVelocity.magnitude < 20;
             bool control = vessel.isCommandable && vessel.angularVelocity.magnitude < 99;
             bool dead = (!hasPropulsion && !hasWeapons) || !control;
 
-            alive = !dead;
-            return alive;
+            //return opposite of the death boolean, true if alive
+            return !dead;
         }
 
         private bool CheckWithdraw()
