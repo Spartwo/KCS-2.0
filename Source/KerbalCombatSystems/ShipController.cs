@@ -368,26 +368,37 @@ namespace KerbalCombatSystems
                 // Aim at target using current projectile weapon.
                 // The weapon handles firing.
 
+
                 state = "Firing Projectile";
                 fc.throttle = 0;
                 currentProjectile.target = target;
                 currentProjectile.side = side;
+                string WeaponType = currentProjectile.weaponType;
 
-                // Temporarily disabled.
-                if (currentProjectile.weaponType == "Rocket")
-                {
-                    yield return new WaitForSeconds(updateInterval);
-                    yield break;
-                }
+                //save current control reference and part transform to reset at end of frame
+                Part OriginControl = vessel.GetReferenceTransformPart();
 
                 while (UnderTimeLimit() && target != null && currentProjectile.canFire)
                 {
                     fc.attitude = currentProjectile.Aim();
                     fc.RCSVector = Vector3.ProjectOnPlane(RelVel(vessel, target), FromTo(vessel, target)) * -1;
 
-                    // todo: correct for relative and angular velocity while firing if firing at an accelerating target
+                    if (WeaponType != "Missile")
+                    {
+                        //set the part and ship transforms to ones inline with the weapon
+                        vessel.SetReferenceTransform(currentProjectile.AimingPart);
+                        yield return new WaitForFixedUpdate();
+                        //reset to original positions after frame update
+                        vessel.SetReferenceTransform(OriginControl);
+                    }
+                    else
+                    {
+                        yield return new WaitForFixedUpdate();
+                    }
 
-                    yield return new WaitForFixedUpdate();
+
+                    // todo: correct for relative and angular velocity while firing if firing at an accelerating target
+                    //todo: Look into a more delayed method of control point reset as there are occasional navball jitters when the AI spam fires
                 }
             }
             else if (CheckOrbitUnsafe())

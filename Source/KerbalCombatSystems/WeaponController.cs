@@ -27,6 +27,8 @@ namespace KerbalCombatSystems
         public Side side;
         public int childDecouplers;
 
+        public Part AimingPart;
+
         [KSPField(isPersistant = true)]
         public bool canFire = true;
 
@@ -99,7 +101,7 @@ namespace KerbalCombatSystems
               guiActive = true,
               guiActiveEditor = true,
               guiName = "Proximity Timer",
-              guiUnits = "Seconds",
+              guiUnits = " Seconds",
               groupName = missileGroupName,
               groupDisplayName = missileGroupName),
               UI_FloatRange(
@@ -326,6 +328,8 @@ namespace KerbalCombatSystems
             Fields["terminalVelocity"].guiActiveEditor = weaponType == "Missile";
             Fields["useAsInterceptor"].guiActive = weaponType == "Missile";
             Fields["useAsInterceptor"].guiActiveEditor = weaponType == "Missile";
+            Fields["warheadTimer"].guiActive = weaponType == "Missile";
+            Fields["warheadTimer"].guiActiveEditor = weaponType == "Missile";
             //Fields["MatchTargetVelocity"].guiActive = weaponType == "Missile";
             //Fields["MatchTargetVelocity"].guiActiveEditor = weaponType == "Missile";
             //Firework fields

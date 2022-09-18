@@ -68,6 +68,8 @@ namespace KerbalCombatSystems
                 // Update debug lines.
                 Origin = FiringPart.transform.position;
                 KCSDebug.PlotLine(new[] { Origin, Origin + (AimVector * 15)}, AimLine);
+
+                controller.AimingPart = FiringPart;
             }
 
             //once aligned correctly start the firing sequence
